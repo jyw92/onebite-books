@@ -12,3 +12,20 @@ export interface ApiResponse<T> {
   status: number;
   message: string;
 }
+export interface Review {
+  bookId: string;
+  content: string;
+  author: string;
+}
+
+export interface ActionState {
+  status: boolean;
+  message: string;
+}
+export interface ReviewData {
+  id: number;
+  content: string;
+  author: string;
+  createdAt: string;
+  bookId: number;
+}

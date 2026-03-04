@@ -3,20 +3,21 @@ import BookItem from '@/components/book-item';
 import {getLocale} from 'next-intl/server';
 import {api} from '@/api';
 import {Book} from '@/types';
+import {delay} from '@/utils/delay';
+import {Suspense} from 'react';
+import BookListSkeleton from '@/components/skeleton/book-list-skeleton';
 
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{q?: string}>; // Promise로 정의
-}) {
+async function SearchResult({q}: {q: string}) {
   const lng = await getLocale();
-  const {q} = await searchParams; // 여기서 await 필수!
+  // 여기서 await 필수!
+
+  await delay(1500);
 
   const response = await api.get<Book[]>(
     '/book/search',
     lng,
     {q: q || ''}, // 검색어가 없을 때 빈 문자열 처리
-    {cache: 'no-store'},
+    {cache: 'force-cache'},
   );
 
   return (
@@ -25,5 +26,18 @@ export default async function Page({
         <BookItem key={book.id} {...book} />
       ))}
     </div>
+  );
+}
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{q?: string}>; // Promise로 정의
+}) {
+  const {q} = await searchParams;
+  return (
+    <Suspense fallback={<BookListSkeleton count={3} />}>
+      <SearchResult q={q || ''} />
+    </Suspense>
   );
 }

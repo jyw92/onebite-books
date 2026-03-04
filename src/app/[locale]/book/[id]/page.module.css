@@ -1,7 +1,13 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 50px;
+
+  &>section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 }
 
 .cover_img_container {
@@ -26,7 +32,7 @@
   content: "";
 }
 
-.cover_img_container > img {
+.cover_img_container>img {
   z-index: 1;
   max-height: 350px;
   height: 100%;

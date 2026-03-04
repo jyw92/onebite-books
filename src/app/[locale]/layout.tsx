@@ -11,7 +11,7 @@ import {api} from '@/api';
 
 async function Footer() {
   const lng = await getLocale();
-  const response = await api.get<Book[]>('/book', lng);
+  const response = await api.get<Book[]>('/book', lng, {}, {cache: 'force-cache'});
   if (!response.data || response.data.length === 0) {
     // 데이터가 없음
     return <footer>제작 @winterlood</footer>;
@@ -50,9 +50,7 @@ export default async function LocaleLayout({
           <header>
             <Link href={'/'}>📚 ONEBITE BOOKS</Link>
           </header>
-          <main>
-            <QueryProvider>{children}</QueryProvider>
-          </main>
+          <main>{children}</main>
           <Footer />
         </div>
       </body>

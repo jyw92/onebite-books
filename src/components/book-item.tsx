@@ -1,16 +1,8 @@
-import type { BookData } from "@/types";
-import Link from "next/link";
-import style from "./book-item.module.css";
+import type {Book} from '@/types';
+import Link from 'next/link';
+import style from './book-item.module.css';
 
-export default function BookItem({
-  id,
-  title,
-  subTitle,
-  description,
-  author,
-  publisher,
-  coverImgUrl,
-}: BookData) {
+export default function BookItem({id, title, subTitle, description, author, publisher, coverImgUrl}: Book) {
   return (
     <Link href={`/book/${id}`} className={style.container}>
       <img src={coverImgUrl} />

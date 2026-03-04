@@ -1,7 +1,16 @@
 import {getLocale} from 'next-intl/server';
 import style from './page.module.css';
 import {api} from '@/api';
-import {Book} from '@/types';
+import {Book, ReviewData} from '@/types';
+import ReviewItem from '@/components/review-item';
+import ReviewEditor from '@/components/review-editor';
+
+// export const dynamicParams = false
+//  {
+//   "bookId": 0,
+//   "content": "string",
+//   "author": "string"
+// }
 
 const mockData = {
   id: 1,
@@ -14,26 +23,70 @@ const mockData = {
   coverImgUrl: 'https://shopping-phinf.pstatic.net/main_3888828/38888282618.20230913071643.jpg',
 };
 
-export default async function Page({params}: {params: Promise<{id: string | string[]}>}) {
-  const {id} = await params;
+export function generateStaticParams() {
+  return [{id: '1'}, {id: '2'}, {id: '3'}];
+}
 
-  // const {title, subTitle, description, author, publisher, coverImgUrl} = mockData;
+async function BookDetail({bookId}: {bookId: string}) {
+  try {
+    const lng = await getLocale();
+    const response = await api.get<Book>(`/book/${bookId}`, lng);
+    const book = response?.data;
 
+    // 데이터가 없는 경우 처리
+    if (!book) {
+      return <section>해당 도서를 찾을 수 없습니다. (ID: {bookId})</section>;
+    }
+
+    const {title, subTitle, description, author, publisher, coverImgUrl} = book;
+
+    return (
+      <section>
+        <div className={style.cover_img_container} style={{backgroundImage: `url('${coverImgUrl}')`}}>
+          <img src={coverImgUrl} />
+        </div>
+        <div className={style.title}>{title}</div>
+        <div className={style.subTitle}>{subTitle}</div>
+        <div className={style.author}>
+          {author} | {publisher}
+        </div>
+        <div className={style.description}>{description}</div>
+      </section>
+    );
+  } catch (err) {
+    console.error(err);
+    return <section>데이터 로딩 중 오류가 발생했습니다.</section>;
+  }
+}
+
+async function ReviewList({bookId}: {bookId: string}) {
   const lng = await getLocale();
-  const response = await api.get<Book>(`/book/${id}`, lng);
-  const book = response.data;
-  const {title, subTitle, description, author, publisher, coverImgUrl} = book;
+  const response = await api.get<ReviewData[]>(`/review/book/${bookId}`, lng);
+
+  // response.data가 없을 경우 빈 배열로 초기화하거나 예외 처리
+  const reviews = response.data || [];
+
+  // 만약 리뷰가 없을 때 다른 메시지를 보여주고 싶다면:
+  if (reviews.length === 0) {
+    return <section>아직 작성된 리뷰가 없습니다.</section>;
+  }
+
+  return (
+    <section>
+      {reviews.map((review) => (
+        <ReviewItem key={`review-item-${review.id}`} {...review} />
+      ))}
+    </section>
+  );
+}
+
+export default async function Page({params}: {params: Promise<{id: string}>}) {
+  const {id} = await params;
   return (
     <div className={style.container}>
-      <div className={style.cover_img_container} style={{backgroundImage: `url('${coverImgUrl}')`}}>
-        <img src={coverImgUrl} />
-      </div>
-      <div className={style.title}>{title}</div>
-      <div className={style.subTitle}>{subTitle}</div>
-      <div className={style.author}>
-        {author} | {publisher}
-      </div>
-      <div className={style.description}>{description}</div>
+      <BookDetail bookId={id} />
+      <ReviewEditor bookId={id} />
+      <ReviewList bookId={id} />
     </div>
   );
 }

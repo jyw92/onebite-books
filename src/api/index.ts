@@ -1,4 +1,5 @@
 import {ApiResponse} from '@/types';
+import {notFound} from 'next/navigation';
 // import * as Sentry from '@sentry/nextjs';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -51,33 +52,37 @@ export async function fetchApi<TResponse, TData = unknown>(
       ...(next && {next}),
     });
 
-    const responseData = await response.json();
+    // ✅ 204 No Content 또는 빈 body 처리
+    const contentType = response.headers.get('Content-Type') ?? '';
+    const hasBody = contentType.includes('application/json') && response.status !== 204;
+    const responseData = hasBody ? await response.json() : null;
 
-    // 에러 처리
     if (response.status === 501) {
       throw new ApiError(response.status, `error code:${response.status} 서버 응답 없음`);
     }
 
     if (!response.ok) {
-      throw new ApiError(response.status, responseData.message || `${response.status}`);
+      throw new ApiError(response.status, responseData?.message || `${response.status}`);
     }
 
-    // --- [박자 맞추기 핵심 로직 시작] ---
+    // ✅ body가 없는 성공 응답 (204 등) 처리
+    if (responseData === null) {
+      return {
+        data: null as TResponse,
+        status: response.status,
+        message: 'ok',
+      };
+    }
 
-    // 1. 이미 ApiResponse 형태({ data: ... })로 왔다면 그대로 반환
     if (responseData && typeof responseData === 'object' && 'data' in responseData) {
       return responseData as ApiResponse<TResponse>;
     }
 
-    // 2. 백엔드에서 배열([])이나 순수 객체만 왔다면,
-    // 우리가 약속한 ApiResponse 규격으로 포장해서 반환
     return {
-      data: responseData as TResponse, // 원본 데이터를 data 필드에 쏙 넣음
+      data: responseData as TResponse,
       status: response.status,
       message: 'ok',
     };
-
-    // --- [박자 맞추기 핵심 로직 끝] ---
   } catch (error) {
     if (error instanceof ApiError) throw error;
     console.error('Fetch Error:', error);
