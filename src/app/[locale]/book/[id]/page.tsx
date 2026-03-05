@@ -4,13 +4,22 @@ import {api} from '@/api';
 import {Book, ReviewData} from '@/types';
 import ReviewItem from '@/components/review-item';
 import ReviewEditor from '@/components/review-editor';
-
+import {scan} from 'react-scan';
+import Image from 'next/image';
+import {Metadata} from 'next';
 // export const dynamicParams = false
 //  {
 //   "bookId": 0,
 //   "content": "string",
 //   "author": "string"
 // }
+
+if (typeof window !== 'undefined') {
+  scan({
+    enabled: true,
+    log: true, // 콘솔에 정보를 찍어줌
+  });
+}
 
 const mockData = {
   id: 1,
@@ -43,14 +52,17 @@ async function BookDetail({bookId}: {bookId: string}) {
     return (
       <section>
         <div className={style.cover_img_container} style={{backgroundImage: `url('${coverImgUrl}')`}}>
-          <img src={coverImgUrl} />
+          {/* <img src={coverImgUrl} /> */}
+          <Image src={coverImgUrl} width={269} height={350} alt={`도서의 ${title}이미지`} />
         </div>
-        <div className={style.title}>{title}</div>
-        <div className={style.subTitle}>{subTitle}</div>
-        <div className={style.author}>
-          {author} | {publisher}
+        <div className="flex flex-col gap-2 px-4">
+          <div className={style.title}>{title}</div>
+          <div className={style.subTitle}>{subTitle}</div>
+          <div className={style.author}>
+            {author} | {publisher}
+          </div>
+          <div className={style.description}>{description}</div>
         </div>
-        <div className={style.description}>{description}</div>
       </section>
     );
   } catch (err) {
@@ -72,12 +84,45 @@ async function ReviewList({bookId}: {bookId: string}) {
   }
 
   return (
-    <section>
+    <section className="px-4">
       {reviews.map((review) => (
         <ReviewItem key={`review-item-${review.id}`} {...review} />
       ))}
     </section>
   );
+}
+
+export async function generateMetadata({params}: {params: Promise<{id: string}>}) {
+  // bookId -> id로 변경
+  try {
+    const lng = await getLocale();
+    const {id} = await params; // 변수명 일치 확인
+
+    const response = await api.get<Book>(`/book/${id}`, lng);
+    const book = response?.data;
+
+    if (!book) {
+      return {
+        title: '도서를 찾을 수 없습니다',
+      };
+    }
+
+    const {title, description, coverImgUrl} = book;
+    return {
+      title: `${title} - 한입북스`,
+      description: `${description}`,
+      openGraph: {
+        title: `${title} - 한입북스`,
+        description: `${description}`,
+        images: [coverImgUrl],
+      },
+    };
+  } catch (error) {
+    console.error('Metadata Error:', error);
+    return {
+      title: '에러 발생 - 한입북스',
+    };
+  }
 }
 
 export default async function Page({params}: {params: Promise<{id: string}>}) {

@@ -8,6 +8,7 @@ import style from './layout.module.css';
 import QueryProvider from '@/provider/query-provider';
 import {Book} from '@/types';
 import {api} from '@/api';
+import React from 'react';
 
 async function Footer() {
   const lng = await getLocale();
@@ -30,9 +31,11 @@ async function Footer() {
 export default async function LocaleLayout({
   children,
   params,
+  modal,
 }: {
   children: React.ReactNode;
   params: Promise<{locale: string}>;
+  modal: React.ReactNode;
 }) {
   const {locale} = await params;
 
@@ -53,6 +56,8 @@ export default async function LocaleLayout({
           <main>{children}</main>
           <Footer />
         </div>
+        {modal}
+        <div id="modal-root"></div>
       </body>
     </html>
   );

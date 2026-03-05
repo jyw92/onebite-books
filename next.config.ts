@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
         hostname: 'shopping-phinf.pstatic.net',
       },
     ],
+    // domains: ['shopping-phinf.pstatic.net'],
   },
 };
 

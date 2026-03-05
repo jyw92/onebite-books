@@ -14,7 +14,7 @@ function ReviewEditor({bookId}: {bookId: string}) {
   }, [state]);
 
   return (
-    <section>
+    <section className="px-4">
       <form action={formAction} className={style.form_container}>
         <input type="hidden" name="bookId" value={bookId} readOnly />
         <textarea name="content" placeholder="리뷰 내용" required disabled={isPending} />
