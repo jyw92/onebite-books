@@ -15,8 +15,15 @@ export default function Searchbar() {
   };
 
   const onSubmit = () => {
-    if (!search || q === search) return;
-    router.push(`/search?q=${search}`);
+    // 1. 이전 검색어와 현재 검색어가 같으면 중복 요청 방지
+    if (q === search) return;
+
+    // 2. 검색어가 있으면 쿼리 스트링 포함, 없으면 그냥 /search로 이동
+    if (!search) {
+      router.push('/search');
+    } else {
+      router.push(`/search?q=${search}`);
+    }
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
